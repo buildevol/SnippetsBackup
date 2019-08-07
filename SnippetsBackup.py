@@ -18,8 +18,7 @@ while display_main_menu:
         GitHub.backup_single_github_gist()
         break
     elif user_input == '2':
-        # TODO: To be implemented.
-        GitHub.backup_github_gist_from_username()
+        GitHub.backup_gist_from_username()
         break
     else:
         print("Invalid Input.\n")
