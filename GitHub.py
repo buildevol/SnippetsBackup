@@ -47,7 +47,8 @@ def backup_gist_from_username():
     decoded_json_response = response.json()
     total_num_of_github_gists = total_num_of_items_in_all_pages(response,
                                                                 custom_page_size=GITHUB_API_MAX_NUM_OF_PAGE_ITEMS)
-
+    print(f"""There are {total_num_of_github_gists} GitHub Gists found in GitHub username: {github_username}.
+Starting backup...""")
     # TODO: Check for different GitHub Gists but with same file name and backup them as different files.
     #  The current implementation it will override the existing file.
     for github_gist in decoded_json_response:
@@ -55,6 +56,7 @@ def backup_gist_from_username():
         backup_from_raw_files_url(raw_files_url_dict)
 
     print(f"Backup all snippets from the GitHub username: {github_username} completed.")
+
 
 def parse_single_gist_url(raw_gist_url):
     """
