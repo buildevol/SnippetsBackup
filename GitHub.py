@@ -45,15 +45,24 @@ def backup_gist_from_username():
     response = requests.get(api_github_url_format, params={"per_page": GITHUB_API_MAX_NUM_OF_PAGE_ITEMS})
     response.raise_for_status()
     decoded_json_response = response.json()
+
     total_num_of_github_gists = total_num_of_items_in_all_pages(response,
                                                                 custom_page_size=GITHUB_API_MAX_NUM_OF_PAGE_ITEMS)
     print(f"""There are {total_num_of_github_gists} GitHub Gists found in GitHub username: {github_username}.
 Starting backup...""")
+
     # TODO: Check for different GitHub Gists but with same file name and backup them as different files.
     #  The current implementation it will override the existing file.
-    for github_gist in decoded_json_response:
-        raw_files_url_dict = get_raw_files_url_dict_from_single_gist(github_gist)
-        backup_from_raw_files_url(raw_files_url_dict)
+    while True:
+        for github_gist in decoded_json_response:
+            raw_files_url_dict = get_raw_files_url_dict_from_single_gist(github_gist)
+            backup_from_raw_files_url(raw_files_url_dict)
+        if "next" not in response.links.keys():
+            break
+        else:
+            response = requests.get(response.links["next"]["url"])
+            response.raise_for_status()
+            decoded_json_response = response.json()
 
     print(f"Backup all snippets from the GitHub username: {github_username} completed.")
 
