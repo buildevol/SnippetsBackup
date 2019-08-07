@@ -39,6 +39,7 @@ def backup_single_github_gist():
 
     print("Backup a single GitHub Gist completed.")
 
+
 def backup_github_gist_from_username():
     """
     Back up all GitHub Gist from a GitHub username which the user will be prompted to input.
