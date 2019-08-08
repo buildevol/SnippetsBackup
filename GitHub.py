@@ -5,6 +5,7 @@ Author: LEE WEI HAO JONATHAN (buildevol)
 
 import requests
 from urllib.parse import urlparse, parse_qs
+from datetime import datetime
 
 GITHUB_API_BASE_URL = "https://api.github.com"
 GITHUB_API_DEFAULT_NUM_OF_PAGE_ITEMS = 30
@@ -84,10 +85,13 @@ def show_current_rate_limit():
 =================""")
     for category in resources_information:
         category_information = resources_information[category]
+        reset_rate_limit_date_time = datetime.fromtimestamp(category_information["reset"])
+        reset_rate_limit_local_date_time = reset_rate_limit_date_time.astimezone()
+        reset_rate_limit_formatted_local = reset_rate_limit_local_date_time.strftime("%A %d %B %Y %I:%M:%S %p")
         print(f"""{category}:
-    Limit: {category_information["limit"]}
-    Remaining: {category_information["remaining"]}
-    Reset: {category_information["reset"]}""")
+    Limit: {category_information["limit"]} requests per hour
+    Remaining: {category_information["remaining"]} requests
+    Reset: At {reset_rate_limit_formatted_local} local time.""")
 
 
 def parse_single_gist_url(raw_gist_url):
