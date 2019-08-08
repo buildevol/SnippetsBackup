@@ -67,6 +67,29 @@ Starting backup...""")
     print(f"Backup all snippets from the GitHub username: {github_username} completed.")
 
 
+def show_current_rate_limit():
+    """
+    Shows all information on the current GitHub Rate Limit returned by GitHub API
+    The rate object is depreciated as stated by GitHub API v3 so it is not shown.
+    :return: None
+    """
+    response = requests.get(GITHUB_API_BASE_URL + "/rate_limit")
+    response.raise_for_status()
+    decoded_json_response = response.json()
+
+    # Shows only resource object and not rate object which is depreciated in GitHub API v3
+    resources_information = decoded_json_response["resources"]
+
+    print("""GitHub Rate Limit
+=================""")
+    for category in resources_information:
+        category_information = resources_information[category]
+        print(f"""{category}:
+    Limit: {category_information["limit"]}
+    Remaining: {category_information["remaining"]}
+    Reset: {category_information["reset"]}""")
+
+
 def parse_single_gist_url(raw_gist_url):
     """
     Parses the input GitHub Gist URL (A specific GitHub Gist url).
