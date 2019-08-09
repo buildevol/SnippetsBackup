@@ -31,7 +31,7 @@ def backup_single_github_gist():
     decoded_json_response = response.json()
 
     raw_files_url_dict = get_raw_files_url_dict_from_single_gist(decoded_json_response)
-    backup_from_raw_files_url(raw_files_url_dict, github_gist_id)
+    backup_from_raw_files_url(raw_files_url_dict, github_username=github_username, gist_id=github_gist_id)
 
     print("Backup a single GitHub Gist completed.")
 
@@ -57,7 +57,7 @@ Starting backup...""")
         for github_gist in decoded_json_response:
             raw_files_url_dict = get_raw_files_url_dict_from_single_gist(github_gist)
             gist_id = github_gist["id"]
-            backup_from_raw_files_url(raw_files_url_dict, gist_id)
+            backup_from_raw_files_url(raw_files_url_dict, github_username=github_username, gist_id=gist_id)
         if "next" not in response.links.keys():
             break
         else:
@@ -146,13 +146,14 @@ def total_num_of_items_in_all_pages(response, custom_page_size=GITHUB_API_DEFAUL
     return len(last_page_response.json()) + (int(custom_page_size) * (last_page_num - 1))
 
 
-def backup_from_raw_files_url(raw_files_url_dict, gist_id):
+def backup_from_raw_files_url(raw_files_url_dict, github_username, gist_id):
     """
     Back up a single GitHub Gist from an input dictionary containing key value pairs where the raw file url is the key
     and the file name is the value.
-    The backup directory is in the current working directory > GitHub > GitHub Gist id.
+    The backup directory is in the current working directory > GitHub > GitHub username > GitHub Gist id.
     :param raw_files_url_dict: A dictionary containing key value pairs where the raw file url is the key
     and the file name is the value.
+    :param github_username The GitHub username which the GitHub Gist to be backup from.
     :param gist_id The GitHub Gist id returned from the GitHub Gist API for the single GitHub Gist.
     :return: None
     """
@@ -160,7 +161,7 @@ def backup_from_raw_files_url(raw_files_url_dict, gist_id):
         file_response = requests.get(file_url)
         file_response.raise_for_status()
         file_name = raw_files_url_dict[file_url]
-        gist_path = Path.cwd() / "Backup" / "GitHub" / gist_id / file_name
+        gist_path = Path.cwd() / "Backup" / "GitHub" / github_username / gist_id / file_name
         gist_path.parent.mkdir(parents=True, exist_ok=True)
         if gist_path.exists():
             print(f"Skip {file_name} backup as it already exists.")
