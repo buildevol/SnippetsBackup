@@ -6,6 +6,7 @@ Author: LEE WEI HAO JONATHAN (buildevol)
 import requests
 from urllib.parse import urlparse, parse_qs
 from datetime import datetime
+from pathlib import Path
 
 GITHUB_API_BASE_URL = "https://api.github.com"
 GITHUB_API_DEFAULT_NUM_OF_PAGE_ITEMS = 30
@@ -30,7 +31,7 @@ def backup_single_github_gist():
     decoded_json_response = response.json()
 
     raw_files_url_dict = get_raw_files_url_dict_from_single_gist(decoded_json_response)
-    backup_from_raw_files_url(raw_files_url_dict)
+    backup_from_raw_files_url(raw_files_url_dict, github_gist_id)
 
     print("Backup a single GitHub Gist completed.")
 
@@ -52,12 +53,13 @@ def backup_gist_from_username():
     print(f"""There are {total_num_of_github_gists} GitHub Gists found in GitHub username: {github_username}.
 Starting backup...""")
 
-    # TODO: Check for different GitHub Gists but with same file name and backup them as different files.
-    #  The current implementation it will override the existing file.
+    # TODO: If the GitHub Gist based on the GitHub Gist id is already in the SnippetsBackup's Backup GitHub directory,
+    #  skip the backup of the duplicate GitHub Gist to improve performance.
     while True:
         for github_gist in decoded_json_response:
             raw_files_url_dict = get_raw_files_url_dict_from_single_gist(github_gist)
-            backup_from_raw_files_url(raw_files_url_dict)
+            gist_id = github_gist["id"]
+            backup_from_raw_files_url(raw_files_url_dict, gist_id)
         if "next" not in response.links.keys():
             break
         else:
@@ -113,7 +115,7 @@ def get_raw_files_url_dict_from_single_gist(decoded_json):
     """
     Parses the input deserialised json to obtain a dictionary of raw files urls in the GitHub Gist URL.
     :param decoded_json: A deserialised json for a single GitHub Gist from the json returned by GitHub API.
-    :return: A dictionary containing kay value pairs where the raw file url is the key and the file name is the value.
+    :return: A dictionary containing key value pairs where the raw file url is the key and the file name is the value.
     """
     result = {}
     for file in decoded_json["files"]:
@@ -146,19 +148,23 @@ def total_num_of_items_in_all_pages(response, custom_page_size=GITHUB_API_DEFAUL
     return len(last_page_response.json()) + (int(custom_page_size) * (last_page_num - 1))
 
 
-def backup_from_raw_files_url(raw_files_url_dict):
+def backup_from_raw_files_url(raw_files_url_dict, gist_id):
     """
-    Back up a single GitHub Gist from an input dictionary containing kay value pairs where the raw file url is the key
+    Back up a single GitHub Gist from an input dictionary containing key value pairs where the raw file url is the key
     and the file name is the value.
-    :param raw_files_url_dict: A dictionary containing kay value pairs where the raw file url is the key
+    The backup directory is in the current working directory > GitHub > GitHub Gist id.
+    :param raw_files_url_dict: A dictionary containing key value pairs where the raw file url is the key
     and the file name is the value.
+    :param gist_id The GitHub Gist id returned from the GitHub Gist API for the single GitHub Gist.
     :return: None
     """
     for file_url in raw_files_url_dict:
         file_response = requests.get(file_url)
         file_response.raise_for_status()
         file_name = raw_files_url_dict[file_url]
-        with open(file_name, 'wb') as gist_file:
+        gist_path = Path.cwd() / "Backup" / "GitHub" / gist_id / file_name
+        gist_path.parent.mkdir(parents=True, exist_ok=True)
+        with gist_path.open(mode='wb') as gist_file:
             for buffer in file_response.iter_content(CHUNK_SIZE):
                 gist_file.write(buffer)
             print(f"{file_name} backup completed.")
