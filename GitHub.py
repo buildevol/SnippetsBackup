@@ -53,8 +53,6 @@ def backup_gist_from_username():
     print(f"""There are {total_num_of_github_gists} GitHub Gists found in GitHub username: {github_username}.
 Starting backup...""")
 
-    # TODO: If the GitHub Gist based on the GitHub Gist id is already in the SnippetsBackup's Backup GitHub directory,
-    #  skip the backup of the duplicate GitHub Gist to improve performance.
     while True:
         for github_gist in decoded_json_response:
             raw_files_url_dict = get_raw_files_url_dict_from_single_gist(github_gist)
@@ -164,7 +162,11 @@ def backup_from_raw_files_url(raw_files_url_dict, gist_id):
         file_name = raw_files_url_dict[file_url]
         gist_path = Path.cwd() / "Backup" / "GitHub" / gist_id / file_name
         gist_path.parent.mkdir(parents=True, exist_ok=True)
-        with gist_path.open(mode='wb') as gist_file:
-            for buffer in file_response.iter_content(CHUNK_SIZE):
-                gist_file.write(buffer)
-            print(f"{file_name} backup completed.")
+        if gist_path.exists():
+            print(f"Skip {file_name} backup as it already exists.")
+            continue
+        else:
+            with gist_path.open(mode='wb') as gist_file:
+                for buffer in file_response.iter_content(CHUNK_SIZE):
+                    gist_file.write(buffer)
+                print(f"{file_name} backup completed.")
